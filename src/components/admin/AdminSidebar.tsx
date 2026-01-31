@@ -1,0 +1,111 @@
+import { Link, useLocation } from "react-router-dom";
+import { ClipboardList, Users, BarChart3, LogOut, Menu, X } from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+
+const navItems = [
+  {
+    title: "Pending Requests",
+    href: "/admin/dashboard",
+    icon: ClipboardList,
+  },
+  {
+    title: "Approved Users",
+    href: "/admin/dashboard/approved",
+    icon: Users,
+  },
+  {
+    title: "Attendance Logs",
+    href: "/admin/dashboard/attendance",
+    icon: BarChart3,
+  },
+];
+
+interface AdminSidebarProps {
+  onLogout: () => void;
+}
+
+const AdminSidebar = ({ onLogout }: AdminSidebarProps) => {
+  const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  return (
+    <>
+      {/* Mobile toggle */}
+      <button
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-sidebar rounded-lg text-sidebar-foreground"
+        onClick={() => setMobileOpen(!mobileOpen)}
+      >
+        {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+      </button>
+
+      {/* Overlay */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed top-0 left-0 h-full w-64 bg-sidebar text-sidebar-foreground z-50 transition-transform duration-300",
+          "lg:translate-x-0",
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <div className="p-6 border-b border-sidebar-border">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center">
+                <span className="text-sidebar-primary-foreground font-bold">FD</span>
+              </div>
+              <div>
+                <p className="font-semibold text-sidebar-foreground">FocusDesk</p>
+                <p className="text-xs text-sidebar-foreground/60">Admin Panel</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 p-4 space-y-1">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                    isActive
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                  )}
+                >
+                  <item.icon className="w-5 h-5" />
+                  {item.title}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Footer */}
+          <div className="p-4 border-t border-sidebar-border">
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-all"
+            >
+              <LogOut className="w-5 h-5" />
+              Logout
+            </button>
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+};
+
+export default AdminSidebar;
