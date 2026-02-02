@@ -17,7 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, Calendar, User, Building2, Fingerprint, Clock, Activity } from "lucide-react";
+import { Loader2, Calendar, User, Building2, Fingerprint, Clock, Activity, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface User {
   id: number;
@@ -44,6 +45,7 @@ const ApprovedUsersTable = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailUser, setDetailUser] = useState<User | null>(null);
   const [detailLogs, setDetailLogs] = useState<ScanLog[]>([]);
+  const [searchInput, setSearchInput] = useState("");
 
   const formatDateTime = (dateString: string) => {
     if (!dateString) return "N/A";
@@ -62,6 +64,19 @@ const ApprovedUsersTable = () => {
     if (now > end) return <Badge variant="destructive" className="bg-red-50 text-red-600 border-red-100">Expired</Badge>;
     return <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white">Active Now</Badge>;
   };
+
+  const normalized = (value: string) => value.toLowerCase().trim();
+
+  const filteredUsers = searchInput
+    ? users.filter((u) => {
+        const query = normalized(searchInput);
+        return (
+          normalized(u.fullName).includes(query) ||
+          normalized(u.idNumber).includes(query) ||
+          normalized(u.organisation).includes(query)
+        );
+      })
+    : users;
 
   useEffect(() => { fetchApproved(); }, []);
 
@@ -99,13 +114,26 @@ const ApprovedUsersTable = () => {
 
   return (
     <div className="glass-card border-none shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
-      <div className="p-6 border-b flex justify-between items-center bg-gradient-to-r from-slate-50 to-transparent">
+      <div className="p-6 border-b flex flex-col gap-4 bg-gradient-to-r from-slate-50 to-transparent sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-bold text-slate-800">Approved Access Control</h2>
           <p className="text-sm text-slate-500">Manage and monitor active QR authorizations</p>
         </div>
-        <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-100">
-          <Calendar className="w-5 h-5 text-primary" />
+        <div className="flex w-full max-w-md items-center gap-2">
+          <div className="flex w-full items-center gap-2">
+            <Input
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search by name, ID, or organisation"
+              className="bg-white"
+            />
+            <Button type="button" size="sm" className="shrink-0" aria-label="Search">
+              <Search className="w-4 h-4 mr-1" /> Search
+            </Button>
+          </div>
+          <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-100 shrink-0">
+            <Calendar className="w-5 h-5 text-primary" />
+          </div>
         </div>
       </div>
 
@@ -120,7 +148,7 @@ const ApprovedUsersTable = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users.map((u) => (
+          {filteredUsers.map((u) => (
             <TableRow key={u.id} className="group hover:bg-slate-50/80 transition-all">
               <TableCell>
                 <div className="flex items-center gap-3">
@@ -150,6 +178,10 @@ const ApprovedUsersTable = () => {
           ))}
         </TableBody>
       </Table>
+
+      {filteredUsers.length === 0 && users.length > 0 && (
+        <div className="p-8 text-center text-slate-500">No results found for "{searchInput}"</div>
+      )}
 
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden border-none shadow-2xl">

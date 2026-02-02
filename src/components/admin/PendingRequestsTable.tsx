@@ -18,10 +18,11 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import API from "@/api/api";
+import { Input } from "@/components/ui/input";
 
 /**
  * ✅ Correct Request Type for Sequelize/MySQL
@@ -42,6 +43,7 @@ const PendingRequestsTable = () => {
   const [rejectReason, setRejectReason] = useState("");
   const [loadingId, setLoadingId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
 
   /**
    * ✅ Fetch pending requests
@@ -76,6 +78,19 @@ const PendingRequestsTable = () => {
       timeStyle: "short",
     });
   };
+
+  const normalized = (value: string) => value.toLowerCase().trim();
+
+  const filteredRequests = searchInput
+    ? requests.filter((request) => {
+        const query = normalized(searchInput);
+        return (
+          normalized(request.fullName).includes(query) ||
+          normalized(request.idNumber).includes(query) ||
+          normalized(request.organisation).includes(query)
+        );
+      })
+    : requests;
 
   /**
    * ✅ Approve Request
@@ -146,12 +161,27 @@ const PendingRequestsTable = () => {
         className="glass-card overflow-hidden"
       >
         <div className="p-6 border-b border-border">
-          <h2 className="text-xl font-semibold text-foreground">
-            Pending Requests
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Review and approve access requests
-          </p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">
+                Pending Requests
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Review and approve access requests
+              </p>
+            </div>
+            <div className="flex w-full max-w-md items-center gap-2">
+              <Input
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Search by name, ID, or organisation"
+                className="bg-muted/30"
+              />
+              <Button type="button" size="sm" className="shrink-0" aria-label="Search">
+                <Search className="w-4 h-4 mr-1" /> Search
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* ✅ Loading State */}
@@ -167,6 +197,12 @@ const PendingRequestsTable = () => {
             </div>
             <p className="text-muted-foreground">No pending requests</p>
           </div>
+        ) : filteredRequests.length === 0 ? (
+          <div className="p-12 text-center">
+            <p className="text-muted-foreground">
+              No results found for "{searchInput}"
+            </p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <Table>
@@ -181,7 +217,7 @@ const PendingRequestsTable = () => {
               </TableHeader>
 
               <TableBody>
-                {requests.map((request) => (
+                {filteredRequests.map((request) => (
                   <TableRow key={request.id}>
                     <TableCell className="font-medium">
                       {request.fullName}

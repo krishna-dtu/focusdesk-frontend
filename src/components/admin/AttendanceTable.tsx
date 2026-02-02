@@ -17,7 +17,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, History, Coffee, LogIn, LogOut, ArrowRightCircle, Activity } from "lucide-react";
+import { Loader2, History, Coffee, LogIn, LogOut, ArrowRightCircle, Activity, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface Attendance {
   requestId: number;
@@ -45,6 +46,7 @@ const AttendanceTable = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailUser, setDetailUser] = useState<Attendance | null>(null);
   const [detailLogs, setDetailLogs] = useState<ScanLog[]>([]);
+  const [searchInput, setSearchInput] = useState("");
 
   useEffect(() => { fetchAttendance(); }, []);
 
@@ -65,6 +67,19 @@ const AttendanceTable = () => {
     const date = new Date(dateString);
     return date.toLocaleString("en-IN", { hour: '2-digit', minute: '2-digit', hour12: true });
   };
+
+  const normalized = (value: string) => value.toLowerCase().trim();
+
+  const filteredData = searchInput
+    ? data.filter((row) => {
+        const query = normalized(searchInput);
+        return (
+          normalized(row.fullName).includes(query) ||
+          normalized(row.idNumber).includes(query) ||
+          normalized(row.organisation).includes(query)
+        );
+      })
+    : data;
 
   const openDetails = async (row: Attendance) => {
     setDetailOpen(true);
@@ -94,12 +109,25 @@ const AttendanceTable = () => {
   return (
     <div className="glass-card overflow-hidden bg-white/90 border-none shadow-xl">
       <div className="p-6 border-b bg-gradient-to-r from-blue-50/50 to-transparent">
-        <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg"><History className="w-5 h-5 text-blue-600" /></div>
-            <div>
-                <h2 className="text-xl font-bold text-slate-800">Attendance Tracker</h2>
-                <p className="text-sm text-slate-500">Real-time presence and movement analytics</p>
-            </div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg"><History className="w-5 h-5 text-blue-600" /></div>
+              <div>
+                  <h2 className="text-xl font-bold text-slate-800">Attendance Tracker</h2>
+                  <p className="text-sm text-slate-500">Real-time presence and movement analytics</p>
+              </div>
+          </div>
+          <div className="flex w-full max-w-md items-center gap-2">
+            <Input
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search by name, ID, or organisation"
+              className="bg-white"
+            />
+            <Button type="button" size="sm" className="shrink-0" aria-label="Search">
+              <Search className="w-4 h-4 mr-1" /> Search
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -114,7 +142,7 @@ const AttendanceTable = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((a) => (
+          {filteredData.map((a) => (
             <TableRow key={a.requestId} className="hover:bg-blue-50/30 transition-all group">
               <TableCell>
                 <div className="flex flex-col">
@@ -138,6 +166,10 @@ const AttendanceTable = () => {
           ))}
         </TableBody>
       </Table>
+
+      {filteredData.length === 0 && data.length > 0 && (
+        <div className="p-8 text-center text-slate-500">No results found for "{searchInput}"</div>
+      )}
 
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-4xl p-0 gap-0 border-none shadow-2xl rounded-2xl overflow-hidden">

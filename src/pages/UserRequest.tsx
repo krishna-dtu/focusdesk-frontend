@@ -46,8 +46,16 @@ const UserRequest = () => {
       return;
     }
 
+    const validFromDate = new Date(formData.validFrom);
+    const validUntilDate = new Date(formData.validUntil);
+
+    if (Number.isNaN(validFromDate.getTime()) || Number.isNaN(validUntilDate.getTime())) {
+      toast.error("Invalid date format");
+      return;
+    }
+
     // ✅ Validity check
-    if (new Date(formData.validFrom) >= new Date(formData.validUntil)) {
+    if (validFromDate >= validUntilDate) {
       toast.error("Valid Until must be after Valid From");
       return;
     }
@@ -61,8 +69,8 @@ const UserRequest = () => {
         organisation: formData.organisation,
 
         // ✅ Send validity dates to backend
-        validFrom: formData.validFrom,
-        validUntil: formData.validUntil,
+        validFrom: validFromDate.toISOString(),
+        validUntil: validUntilDate.toISOString(),
       });
 
       setSubmitted(true);
