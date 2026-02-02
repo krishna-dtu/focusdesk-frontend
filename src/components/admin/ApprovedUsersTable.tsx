@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "@/api/api";
 import { toast } from "sonner";
-
 import {
   Table,
   TableBody,
@@ -10,80 +9,225 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-import { Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Loader2, Calendar, User, Building2, Fingerprint, Clock, Activity } from "lucide-react";
 
 interface User {
   id: number;
   fullName: string;
   idNumber: string;
   organisation: string;
+  validFrom: string;
   validUntil: string;
+}
+
+interface ScanLog {
+  id: number;
+  passType: "IN" | "OUT";
+  gateId: string;
+  result: "ALLOW" | "DENY";
+  reason: string | null;
+  createdAt: string;
 }
 
 const ApprovedUsersTable = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailUser, setDetailUser] = useState<User | null>(null);
+  const [detailLogs, setDetailLogs] = useState<ScanLog[]>([]);
 
-  useEffect(() => {
-    fetchApproved();
-  }, []);
+  const formatDateTime = (dateString: string) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleString("en-IN", {
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true,
+    });
+  };
+
+  const getAccessStatus = (from: string, until: string) => {
+    const now = new Date();
+    const start = new Date(from);
+    const end = new Date(until);
+    if (now < start) return <Badge variant="outline" className="text-blue-500 border-blue-500 bg-blue-50">Upcoming</Badge>;
+    if (now > end) return <Badge variant="destructive" className="bg-red-50 text-red-600 border-red-100">Expired</Badge>;
+    return <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white">Active Now</Badge>;
+  };
+
+  useEffect(() => { fetchApproved(); }, []);
 
   const fetchApproved = async () => {
     try {
       setLoading(true);
-
       const res = await API.get("/api/admin/approved");
-
       setUsers(res.data.users || []);
-      setLoading(false);
     } catch (err) {
-      setLoading(false);
       toast.error("Failed to load approved users");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="p-10 text-center">
-        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-3" />
-        Loading approved users...
-      </div>
-    );
-  }
+  const openDetails = async (user: User) => {
+    setDetailOpen(true);
+    setDetailUser(user);
+    setDetailLogs([]);
+    try {
+      setDetailLoading(true);
+      const res = await API.get(`/api/admin/scanlogs/${user.id}`);
+      setDetailLogs(res.data?.logs || []);
+      if (res.data?.user) {
+        setDetailUser(res.data.user);
+      }
+    } catch (err) {
+      toast.error("Failed to load scan logs");
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  if (loading) return <div className="p-20 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" /></div>;
 
   return (
-    <div className="glass-card overflow-hidden">
-      <div className="p-6 border-b">
-        <h2 className="text-xl font-semibold">Approved Users</h2>
-        <p className="text-sm text-muted-foreground">
-          Users currently having active QR access
-        </p>
+    <div className="glass-card border-none shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
+      <div className="p-6 border-b flex justify-between items-center bg-gradient-to-r from-slate-50 to-transparent">
+        <div>
+          <h2 className="text-xl font-bold text-slate-800">Approved Access Control</h2>
+          <p className="text-sm text-slate-500">Manage and monitor active QR authorizations</p>
+        </div>
+        <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-100">
+          <Calendar className="w-5 h-5 text-primary" />
+        </div>
       </div>
 
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-slate-50/50">
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>College ID</TableHead>
-            <TableHead>Organisation</TableHead>
-            <TableHead>Valid Until</TableHead>
+            <TableHead className="font-bold">User Identity</TableHead>
+            <TableHead className="font-bold">Organisation</TableHead>
+            <TableHead className="font-bold">Current Status</TableHead>
+            <TableHead className="font-bold">Validity Window</TableHead>
+            <TableHead className="text-right font-bold">Action</TableHead>
           </TableRow>
         </TableHeader>
-
         <TableBody>
           {users.map((u) => (
-            <TableRow key={u.id}>
-              <TableCell>{u.fullName}</TableCell>
-              <TableCell className="font-mono">{u.idNumber}</TableCell>
-              <TableCell>{u.organisation}</TableCell>
+            <TableRow key={u.id} className="group hover:bg-slate-50/80 transition-all">
               <TableCell>
-                {new Date(u.validUntil).toLocaleString("en-IN")}
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs uppercase">
+                    {u.fullName.charAt(0)}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-slate-700">{u.fullName}</span>
+                    <span className="text-xs font-mono text-slate-400">{u.idNumber}</span>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell className="text-slate-600 font-medium">{u.organisation}</TableCell>
+              <TableCell>{getAccessStatus(u.validFrom, u.validUntil)}</TableCell>
+              <TableCell className="text-[11px]">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-emerald-600"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {formatDateTime(u.validFrom)}</div>
+                  <div className="flex items-center gap-1.5 text-rose-500"><div className="w-1.5 h-1.5 rounded-full bg-rose-500" /> {formatDateTime(u.validUntil)}</div>
+                </div>
+              </TableCell>
+              <TableCell className="text-right">
+                <Button size="sm" variant="secondary" className="bg-slate-100 hover:bg-primary hover:text-white transition-all shadow-none" onClick={() => openDetails(u)}>
+                  View Activity
+                </Button>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden border-none shadow-2xl">
+          <div className="bg-slate-900 p-6 text-white">
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+              <Activity className="w-6 h-6 text-primary" /> Activity Dashboard
+            </DialogTitle>
+            <p className="text-slate-400 text-sm mt-1">Detailed scan telemetry for {detailUser?.fullName}</p>
+          </div>
+
+          <div className="p-6 space-y-6 bg-slate-50/50">
+            {/* User Info Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: 'Full Name', value: detailUser?.fullName, icon: User },
+                { label: 'College ID', value: detailUser?.idNumber, icon: Fingerprint, mono: true },
+                { label: 'Organisation', value: detailUser?.organisation, icon: Building2 },
+                { label: 'Auth Window', value: 'Active Range', icon: Clock },
+              ].map((item, i) => (
+                <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                  <div className="flex items-center gap-2 text-slate-400 mb-1">
+                    <item.icon className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">{item.label}</span>
+                  </div>
+                  <p className={`text-sm font-semibold text-slate-700 ${item.mono ? 'font-mono' : ''}`}>{item.value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Scan Logs Table */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b bg-slate-50 flex justify-between items-center">
+                <h3 className="text-sm font-bold text-slate-700">Verification History</h3>
+                <Badge variant="outline" className="bg-white">{detailLogs.length} Records</Badge>
+              </div>
+              <div className="max-h-[350px] overflow-y-auto">
+                <Table>
+                  <TableHeader className="bg-slate-50/50 sticky top-0 z-10">
+                    <TableRow>
+                      <TableHead className="text-[11px] uppercase font-bold">Timestamp</TableHead>
+                      <TableHead className="text-[11px] uppercase font-bold">Direction</TableHead>
+                      <TableHead className="text-[11px] uppercase font-bold">Gate</TableHead>
+                      <TableHead className="text-[11px] uppercase font-bold">Decision</TableHead>
+                      <TableHead className="text-[11px] uppercase font-bold">Details</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {detailLoading ? (
+                      <TableRow><TableCell colSpan={5} className="h-32 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-slate-300" /></TableCell></TableRow>
+                    ) : detailLogs.length === 0 ? (
+                      <TableRow><TableCell colSpan={5} className="h-32 text-center text-slate-400 text-sm italic">No recent activity recorded</TableCell></TableRow>
+                    ) : (
+                      detailLogs.map((log) => (
+                        <TableRow key={log.id} className="hover:bg-slate-50 transition-colors">
+                          <TableCell className="text-xs text-slate-500 font-medium">{formatDateTime(log.createdAt)}</TableCell>
+                          <TableCell>
+                            <Badge className={log.passType === "IN" ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-orange-50 text-orange-600 border-orange-100"} variant="outline">
+                              {log.passType}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs font-bold text-slate-600 uppercase">{log.gateId}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1.5">
+                              <div className={`w-2 h-2 rounded-full ${log.result === "ALLOW" ? "bg-emerald-500" : "bg-rose-500"}`} />
+                              <span className={`text-xs font-bold ${log.result === "ALLOW" ? "text-emerald-600" : "text-rose-600"}`}>{log.result}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs text-slate-400 italic max-w-[150px] truncate">{log.reason || "Success"}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -243,14 +243,20 @@ const PendingRequestsTable = () => {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <Label htmlFor="reason">Rejection Reason</Label>
-            <Textarea
-              id="reason"
-              placeholder="Enter the reason for rejection..."
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              rows={4}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="reason">Rejection Reason</Label>
+              <Textarea
+                id="reason"
+                placeholder="Write a clear reason for rejection..."
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                rows={5}
+                className="min-h-[120px] resize-none bg-muted/30 border-muted-foreground/20 focus-visible:border-primary focus-visible:ring-primary"
+              />
+              <p className="text-xs text-muted-foreground">
+                This note will be shared with the requester.
+              </p>
+            </div>
           </div>
 
           <DialogFooter>
