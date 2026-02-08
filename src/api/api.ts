@@ -4,7 +4,7 @@ import axios from "axios";
 // Local: http://localhost:5000
 // Production: https://focusdesk-backend.onrender.com
 const API = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: "https://focusdesk-backend.onrender.com",
 });
 
 API.interceptors.request.use((req) => {
