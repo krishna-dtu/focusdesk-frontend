@@ -3,13 +3,15 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowLeft, Copy, Clock, Loader2, XCircle } from "lucide-react";
+import { ArrowRight, ArrowLeft, Copy, Clock, Loader2, XCircle, Calendar as CalendarIcon, User } from "lucide-react";
 import { toast } from "sonner";
 
 import Navbar from "@/components/layout/Navbar";
 import API from "@/api/api";
+import ContributionCalendar from "@/components/ContributionCalendar";
 
 import QRCode from "react-qr-code";
 
@@ -20,6 +22,9 @@ const UserDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState<any>(null);
   const [error, setError] = useState(false);
+  const [activeQRData, setActiveQRData] = useState<any>(null);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [calendar, setCalendar] = useState<any[]>([]);
 
   // ✅ Read ID Number
   const [params] = useSearchParams();
@@ -68,13 +73,51 @@ const UserDashboard = () => {
   }, [idNumber]);
 
   /**
+   * ✅ Fetch Active QR (Dynamic Rotation) - Polls every 5 seconds
+   */
+  useEffect(() => {
+    if (!idNumber || userData?.status !== "APPROVED") return;
+
+    let qrInterval: any;
+
+    const fetchActiveQR = async () => {
+      try {
+        const response = await API.get(`/api/user/active-qr/${idNumber}`);
+        setActiveQRData(response.data);
+        
+        // Auto-switch tab to active QR
+        if (response.data.activeQRType) {
+          setActiveTab(response.data.activeQRType.toLowerCase());
+        }
+      } catch (err) {
+        console.error("Active QR fetch error:", err);
+      }
+    };
+
+    fetchActiveQR();
+    qrInterval = setInterval(fetchActiveQR, 5000); // Poll every 5 seconds
+
+    return () => clearInterval(qrInterval);
+  }, [idNumber, userData?.status]);
+
+  /**
+   * ✅ Fetch Contribution Calendar
+   */
+  const fetchCalendar = async () => {
+    try {
+      const response = await API.get(`/api/user/calendar/${idNumber}`);
+      setCalendar(response.data.calendar || []);
+      setShowCalendar(true);
+    } catch (err) {
+      toast.error("Failed to load calendar");
+    }
+  };
+
+  /**
    * ✅ Copy Token (Optional)
    */
   const copyToken = () => {
-    const token =
-      activeTab === "in"
-        ? userData?.entryQR?.qrToken
-        : userData?.exitQR?.qrToken;
+    const token = activeQRData?.qrToken;
 
     if (!token) {
       toast.error("QR not available yet");
@@ -96,9 +139,6 @@ const UserDashboard = () => {
       timeStyle: "short",
     });
   };
-
-  const activeQR =
-    activeTab === "in" ? userData?.entryQR : userData?.exitQR;
 
   /**
    * ✅ Loading Screen
@@ -207,6 +247,17 @@ const UserDashboard = () => {
               </p>
             </div>
 
+            {/* Restriction Warning */}
+            {activeQRData?.status === "RESTRICTED" && (
+              <div className="bg-destructive/10 border border-destructive rounded-xl p-4 mb-6">
+                <p className="text-destructive font-semibold">⚠️ Temporarily Restricted</p>
+                <p className="text-sm text-muted-foreground">
+                  Multiple rapid scans detected. Access restricted until{" "}
+                  {new Date(activeQRData.restrictionUntil).toLocaleTimeString()}
+                </p>
+              </div>
+            )}
+
             {/* Card */}
             <div className="qr-card">
               {/* Validity */}
@@ -228,6 +279,15 @@ const UserDashboard = () => {
                 </div>
               </div>
 
+              {/* Dynamic QR Notice */}
+              {activeQRData?.activeQRType && (
+                <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 mb-4 text-center">
+                  <p className="text-xs text-primary font-semibold">
+                    🔄 Active QR: {activeQRData.activeQRType} • Rotates every 30s
+                  </p>
+                </div>
+              )}
+
               {/* Tabs */}
               <Tabs
                 value={activeTab}
@@ -235,12 +295,12 @@ const UserDashboard = () => {
                 className="w-full"
               >
                 <TabsList className="grid grid-cols-2 h-12 mb-6">
-                  <TabsTrigger value="in">
+                  <TabsTrigger value="in" disabled={activeQRData?.activeQRType !== "IN"}>
                     <ArrowRight className="w-4 h-4 mr-1" />
                     IN QR
                   </TabsTrigger>
 
-                  <TabsTrigger value="out">
+                  <TabsTrigger value="out" disabled={activeQRData?.activeQRType !== "OUT"}>
                     <ArrowLeft className="w-4 h-4 mr-1" />
                     OUT QR
                   </TabsTrigger>
@@ -248,22 +308,31 @@ const UserDashboard = () => {
 
                 {/* ✅ IN QR */}
                 <TabsContent value="in">
-                  <div className="bg-white rounded-2xl p-8 flex justify-center">
-                    <QRCode value={activeQR?.qrToken || ""} size={220} />
-                  </div>
+                  {activeQRData?.activeQRType === "IN" && activeQRData?.qrToken ? (
+                    <div className="bg-white rounded-2xl p-8 flex justify-center">
+                      <QRCode value={activeQRData.qrToken} size={220} />
+                    </div>
+                  ) : (
+                    <div className="bg-muted/20 rounded-2xl p-8 text-center border border-dashed">
+                      <Clock className="w-6 h-6 mx-auto mb-3 text-muted-foreground" />
+                      <p className="text-muted-foreground text-sm">
+                        IN QR not active. Wait for rotation...
+                      </p>
+                    </div>
+                  )}
                 </TabsContent>
 
                 {/* ✅ OUT QR */}
                 <TabsContent value="out">
-                  {userData?.exitQR?.qrToken ? (
+                  {activeQRData?.activeQRType === "OUT" && activeQRData?.qrToken ? (
                     <div className="bg-white rounded-2xl p-8 flex justify-center">
-                      <QRCode value={activeQR?.qrToken || ""} size={220} />
+                      <QRCode value={activeQRData.qrToken} size={220} />
                     </div>
                   ) : (
                     <div className="bg-muted/20 rounded-2xl p-8 text-center border border-dashed">
-                      <Loader2 className="w-6 h-6 animate-spin mx-auto mb-3" />
+                      <Clock className="w-6 h-6 mx-auto mb-3 text-muted-foreground" />
                       <p className="text-muted-foreground text-sm">
-                        OUT QR will be available shortly...
+                        OUT QR not active. Wait for rotation...
                       </p>
                     </div>
                   )}
@@ -275,11 +344,44 @@ const UserDashboard = () => {
                 variant="outline"
                 onClick={copyToken}
                 className="w-full mt-6"
+                disabled={!activeQRData?.qrToken}
               >
                 <Copy className="w-4 h-4 mr-2" />
                 Copy Token
               </Button>
+
+              {/* View Calendar Button */}
+              <Button
+                variant="secondary"
+                onClick={fetchCalendar}
+                className="w-full mt-3"
+              >
+                <CalendarIcon className="w-4 h-4 mr-2" />
+                View My Activity Calendar
+              </Button>
+
+              {/* View Profile Button */}
+              <Button
+                variant="outline"
+                onClick={() => navigate("/user/profile")}
+                className="w-full mt-3"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Edit My Profile
+              </Button>
             </div>
+
+            {/* Contribution Calendar */}
+            {showCalendar && calendar.length > 0 && (
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>My Activity Calendar</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ContributionCalendar activities={calendar} />
+                </CardContent>
+              </Card>
+            )}
 
             {/* Footer */}
             <p className="text-center text-sm text-muted-foreground mt-6">

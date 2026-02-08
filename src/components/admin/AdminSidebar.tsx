@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ClipboardList, Users, BarChart3, LogOut, Menu, X } from "lucide-react";
+import { ClipboardList, Users, BarChart3, LogOut, Menu, X, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +18,11 @@ const navItems = [
     title: "Attendance Logs",
     href: "/admin/dashboard/attendance",
     icon: BarChart3,
+  },
+  {
+    title: "Flagged Activities",
+    href: "/admin/dashboard/flagged",
+    icon: AlertTriangle,
   },
 ];
 

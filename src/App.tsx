@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import UserRequest from "./pages/UserRequest";
 import UserDashboard from "./pages/UserDashboard";
 import ViewMyQR from "./pages/ViewMyQR";
+import MyProfile from "./pages/MyProfile";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/user/request" element={<UserRequest />} />
           <Route path="/user/dashboard" element={<UserDashboard />} />
           <Route path="/user/viewqr" element={<ViewMyQR />} />
+          <Route path="/user/profile" element={<MyProfile />} />
 
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard/*" element={<AdminDashboard />} />

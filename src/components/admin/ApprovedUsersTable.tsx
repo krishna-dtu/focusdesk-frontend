@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "@/api/api";
 import { toast } from "sonner";
 import {
@@ -39,6 +40,7 @@ interface ScanLog {
 }
 
 const ApprovedUsersTable = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -170,9 +172,24 @@ const ApprovedUsersTable = () => {
                 </div>
               </TableCell>
               <TableCell className="text-right">
-                <Button size="sm" variant="secondary" className="bg-slate-100 hover:bg-primary hover:text-white transition-all shadow-none" onClick={() => openDetails(u)}>
-                  View Activity
-                </Button>
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="bg-white hover:bg-primary hover:text-white transition-all"
+                    onClick={() => navigate(`/admin/user-profile/${u.id}`)}
+                  >
+                    View Profile
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="bg-slate-100 hover:bg-primary hover:text-white transition-all shadow-none"
+                    onClick={() => openDetails(u)}
+                  >
+                    View Activity
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}

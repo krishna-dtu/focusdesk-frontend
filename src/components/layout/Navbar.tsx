@@ -30,7 +30,10 @@ const Navbar = () => {
     { name: "Features", href: "#features" },
     { name: "How it Works", href: "#how-it-works" },
     { name: "Admin", href: "/admin/login" },
-    ...(user ? [{ name: "My QR", href: "/user/viewqr" }] : []),
+    ...(user ? [
+      { name: "My QR", href: "/user/viewqr" },
+      { name: "My Profile", href: "/user/profile" }
+    ] : []),
   ];
 
   return (

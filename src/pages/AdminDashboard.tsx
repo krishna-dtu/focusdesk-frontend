@@ -3,6 +3,8 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import PendingRequestsTable from "@/components/admin/PendingRequestsTable";
 import ApprovedUsersTable from "@/components/admin/ApprovedUsersTable";
 import AttendanceTable from "@/components/admin/AttendanceTable";
+import FlaggedActivities from "@/pages/FlaggedActivities";
+import UserProfile from "@/pages/UserProfile";
 import { toast } from "sonner";
 
 const AdminDashboard = () => {
@@ -34,6 +36,8 @@ const AdminDashboard = () => {
             <Route index element={<PendingRequestsTable />} />
             <Route path="approved" element={<ApprovedUsersTable />} />
             <Route path="attendance" element={<AttendanceTable />} />
+            <Route path="flagged" element={<FlaggedActivities />} />
+            <Route path="user-profile/:id" element={<UserProfile />} />
             <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
           </Routes>
         </div>
