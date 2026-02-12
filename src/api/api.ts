@@ -7,7 +7,7 @@ import axios from "axios";
 //
 // FOR LOCALHOST TESTING (CURRENTLY ACTIVE):
 const API = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: "https://focusdesk-backend.onrender.com",
 });
 //
 // FOR PRODUCTION DEPLOYMENT:
