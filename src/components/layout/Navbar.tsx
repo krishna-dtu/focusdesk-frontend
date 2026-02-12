@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, UserCircle, LogOut } from "lucide-react";
+import { Menu, X, UserCircle, LogOut, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import focusDeskLogo from "@/assets/focusdesk-logo.png";
@@ -27,12 +27,11 @@ const Navbar = () => {
 
   // ✅ Nav Links based on login
   const navLinks = [
-    { name: "Features", href: "#features" },
-    { name: "How it Works", href: "#how-it-works" },
+    { name: "Features", href: "http://localhost:5173/#features" },
+    { name: "How it Works", href: "http://localhost:5173/#how-it-works" },
     { name: "Admin", href: "/admin/login" },
     ...(user ? [
-      { name: "My QR", href: "/user/viewqr" },
-      { name: "My Profile", href: "/user/profile" }
+      { name: "My QR", href: "/user/viewqr" }
     ] : []),
   ];
 
@@ -56,27 +55,18 @@ const Navbar = () => {
           {/* ✅ Desktop Links */}
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) =>
-              link.href.startsWith("#") ? (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition"
-                >
-                  {link.name}
-                </a>
-              ) : (
-                <Link
-                  key={link.name}
-                  to={link.href}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition"
-                >
-                  {link.name}
-                </Link>
-              )
+              <Link
+                key={link.name}
+                to={link.href}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition"
+                reloadDocument={link.name === "My QR"}
+              >
+                {link.name}
+              </Link>
             )}
           </div>
 
-          {/* ✅ Right Side Auth */}
+          {/* ✅ Right Side Auth + New Request Icon */}
           <div className="hidden md:flex items-center gap-4">
             {!user ? (
               <Link to="/login">
@@ -84,7 +74,11 @@ const Navbar = () => {
               </Link>
             ) : (
               <div className="flex items-center gap-3">
-                <UserCircle className="w-7 h-7 text-muted-foreground" />
+                {/* New Request green icon */}
+                <Link to="/user/request" title="New Request">
+                  <Plus className="w-7 h-7 text-green-600 hover:text-green-700 transition cursor-pointer" style={{ background: '#e6f9ec', borderRadius: '50%', padding: 4 }} />
+                </Link>
+                <UserCircle className="w-7 h-7 text-muted-foreground cursor-pointer" onClick={() => navigate("/user/profile")} />
                 <Button
                   size="sm"
                   variant="outline"

@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { ClipboardList, Users, BarChart3, LogOut, Menu, X, AlertTriangle, Settings } from "lucide-react";
 import { useState } from "react";
+import { usePendingRequestCount } from "@/hooks/usePendingRequestCount";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -38,6 +39,7 @@ interface AdminSidebarProps {
 const AdminSidebar = ({ onLogout }: AdminSidebarProps) => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pendingCount = usePendingRequestCount();
 
   return (
     <>
@@ -83,6 +85,7 @@ const AdminSidebar = ({ onLogout }: AdminSidebarProps) => {
           <nav className="flex-1 p-4 space-y-1">
             {navItems.map((item) => {
               const isActive = location.pathname === item.href;
+              const showDot = item.title === "Pending Requests" && pendingCount > 0;
               return (
                 <Link
                   key={item.href}
@@ -96,7 +99,12 @@ const AdminSidebar = ({ onLogout }: AdminSidebarProps) => {
                   )}
                 >
                   <item.icon className="w-5 h-5" />
-                  {item.title}
+                  <span className="relative flex items-center">
+                    {item.title}
+                    {showDot && (
+                      <span className="ml-2 w-2.5 h-2.5 bg-red-500 rounded-full inline-block animate-pulse border-2 border-white" />
+                    )}
+                  </span>
                 </Link>
               );
             })}

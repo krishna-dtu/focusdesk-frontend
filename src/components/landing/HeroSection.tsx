@@ -4,6 +4,7 @@ import { QrCode, Shield, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 const HeroSection = () => {
+  const user = localStorage.getItem("focusdesk_user");
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-hero-gradient overflow-hidden pt-16">
       {/* Background decoration */}
@@ -54,12 +55,21 @@ const HeroSection = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Link to="/login">
-              <Button size="lg" className="btn-gradient glow-primary px-8 py-6 text-base">
-                <QrCode className="mr-2 h-5 w-5" />
-                Generate QR Access
-              </Button>
-            </Link>
+            {user ? (
+              <Link to="/user/viewqr">
+                <Button size="lg" className="btn-gradient glow-primary px-8 py-6 text-base">
+                  <QrCode className="mr-2 h-5 w-5" />
+                  My QR
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/login">
+                <Button size="lg" className="btn-gradient glow-primary px-8 py-6 text-base">
+                  <QrCode className="mr-2 h-5 w-5" />
+                  Generate QR Access
+                </Button>
+              </Link>
+            )}
             <Link to="/admin/login">
               <Button variant="outline" size="lg" className="px-8 py-6 text-base group">
                 Admin Dashboard
@@ -68,28 +78,7 @@ const HeroSection = () => {
             </Link>
           </motion.div>
 
-          {/* Floating QR Card Preview */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-16 relative"
-          >
-            <div className="glass-card p-8 max-w-sm mx-auto animate-float">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-medium text-foreground">Gate Access Pass</span>
-                <span className="px-2 py-1 text-xs font-medium rounded-full badge-active">ACTIVE</span>
-              </div>
-              <div className="bg-white rounded-xl p-6 shadow-inner">
-                <div className="w-40 h-40 mx-auto bg-gradient-to-br from-muted to-muted/50 rounded-lg flex items-center justify-center">
-                  <QrCode className="w-24 h-24 text-foreground/20" />
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground text-center mt-4">
-                Scan for entry verification
-              </p>
-            </div>
-          </motion.div>
+
         </div>
       </div>
     </section>

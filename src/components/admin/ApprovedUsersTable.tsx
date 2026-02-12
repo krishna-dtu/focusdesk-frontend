@@ -48,6 +48,13 @@ const ApprovedUsersTable = () => {
   const [detailUser, setDetailUser] = useState<User | null>(null);
   const [detailLogs, setDetailLogs] = useState<ScanLog[]>([]);
   const [searchInput, setSearchInput] = useState("");
+  const [editUserId, setEditUserId] = useState<string | null>(null);
+  const [editValidFrom, setEditValidFrom] = useState("");
+  const [editValidUntil, setEditValidUntil] = useState("");
+  const [editComment, setEditComment] = useState("");
+  const [rejectUserId, setRejectUserId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
 
   const formatDateTime = (dateString: string) => {
     if (!dateString) return "N/A";
@@ -189,8 +196,105 @@ const ApprovedUsersTable = () => {
                   >
                     View Activity
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-blue-500 text-blue-600"
+                    onClick={() => {
+                      setEditUserId(u._id);
+                      setEditValidFrom(u.validFrom);
+                      setEditValidUntil(u.validUntil);
+                      setEditComment("");
+                    }}
+                  >
+                    Edit Validity
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => {
+                      setRejectUserId(u._id);
+                      setRejectReason("");
+                    }}
+                  >
+                    Reject
+                  </Button>
                 </div>
               </TableCell>
+                  {/* Edit Validity Dialog */}
+                  <Dialog open={!!editUserId} onOpenChange={() => setEditUserId(null)}>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Edit Validity & Comment</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-3">
+                        <label className="block text-sm font-medium">Valid From</label>
+                        <Input type="datetime-local" value={editValidFrom?.slice(0, 16)} onChange={e => setEditValidFrom(e.target.value)} />
+                        <label className="block text-sm font-medium">Valid Until</label>
+                        <Input type="datetime-local" value={editValidUntil?.slice(0, 16)} onChange={e => setEditValidUntil(e.target.value)} />
+                        <label className="block text-sm font-medium">Comment</label>
+                        <Input type="text" value={editComment} onChange={e => setEditComment(e.target.value)} placeholder="Reason for change (user will see this)" />
+                        <div className="flex gap-2 justify-end mt-4">
+                          <Button variant="outline" onClick={() => setEditUserId(null)}>Cancel</Button>
+                          <Button
+                            // loading={actionLoading}
+                            onClick={async () => {
+                              setActionLoading(true);
+                              try {
+                                await API.patch(`/api/admin/update-validity/${editUserId}`, {
+                                  validFrom: editValidFrom,
+                                  validUntil: editValidUntil,
+                                  comment: editComment,
+                                });
+                                toast.success("Validity updated");
+                                setEditUserId(null);
+                                fetchApproved();
+                              } catch (err: any) {
+                                toast.error(err.response?.data?.message || "Failed to update validity");
+                              } finally {
+                                setActionLoading(false);
+                              }
+                            }}
+                          >Save</Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Reject User Dialog */}
+                  <Dialog open={!!rejectUserId} onOpenChange={() => setRejectUserId(null)}>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Reject User</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-3">
+                        <label className="block text-sm font-medium">Rejection Reason</label>
+                        <Input type="text" value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Reason for rejection (user will see this)" />
+                        <div className="flex gap-2 justify-end mt-4">
+                          <Button variant="outline" onClick={() => setRejectUserId(null)}>Cancel</Button>
+                          <Button
+                            // loading={actionLoading}
+                            variant="destructive"
+                            onClick={async () => {
+                              setActionLoading(true);
+                              try {
+                                await API.post(`/api/admin/reject/${rejectUserId}`, {
+                                  rejectionReason: rejectReason,
+                                });
+                                toast.success("User rejected");
+                                setRejectUserId(null);
+                                fetchApproved();
+                              } catch (err: any) {
+                                toast.error(err.response?.data?.message || "Failed to reject user");
+                              } finally {
+                                setActionLoading(false);
+                              }
+                            }}
+                          >Reject</Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
             </TableRow>
           ))}
         </TableBody>

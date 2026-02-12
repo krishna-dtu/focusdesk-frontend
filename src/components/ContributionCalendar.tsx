@@ -61,42 +61,69 @@ const ContributionCalendar = ({ activities, startDate, endDate }: ContributionCa
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
 
+  // Group days by week for row display
+  const weeks: typeof calendarData[][] = [];
+  let week: typeof calendarData = [];
+  calendarData.forEach((day, idx) => {
+    week.push(day);
+    if (week.length === 7) {
+      weeks.push(week);
+      week = [];
+    }
+  });
+  if (week.length > 0) weeks.push(week);
+
   return (
     <div className="w-full">
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-col gap-1">
         <TooltipProvider>
-          {calendarData.map((day) => (
-            <Tooltip key={day.date}>
-              <TooltipTrigger asChild>
-                <div
-                  className={`w-3 h-3 rounded-sm ${getColor(
-                    day.level,
-                    day.activity?.isFlagged || false
-                  )} cursor-pointer hover:ring-2 hover:ring-primary transition-all`}
-                />
-              </TooltipTrigger>
-              <TooltipContent>
-                <div className="text-xs">
-                  <p className="font-semibold">{day.date}</p>
-                  {day.activity ? (
-                    <>
-                      <p>Check-in: {formatTime(day.activity.checkInTime || "")}</p>
-                      <p>Check-out: {formatTime(day.activity.checkOutTime || "")}</p>
-                      <p>Duration: {formatDuration(day.activity.totalDuration)}</p>
-                      <p>Scans: {day.activity.scanCount}</p>
-                      {day.activity.isFlagged && (
-                        <p className="text-red-500 font-semibold mt-1">⚠️ Flagged</p>
+          {weeks.map((week, wIdx) => (
+            <div key={wIdx} className="flex gap-1">
+              {week.map((day) => (
+                <Tooltip key={day.date}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className={`w-3 h-3 rounded-sm ${getColor(
+                        day.level,
+                        day.activity?.isFlagged || false
+                      )} cursor-pointer hover:ring-2 hover:ring-primary transition-all`}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-xs">
+                      <p className="font-semibold">{day.date}</p>
+                      {day.activity ? (
+                        <>
+                          <p>Check-in: {formatTime(day.activity.checkInTime || "")}</p>
+                          <p>Check-out: {formatTime(day.activity.checkOutTime || "")}</p>
+                          <p>Duration: {formatDuration(day.activity.totalDuration)}</p>
+                          <p>Scans: {day.activity.scanCount}</p>
+                          {day.activity.isFlagged && (
+                            <p className="text-red-500 font-semibold mt-1">⚠️ Flagged</p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-muted-foreground">No activity</p>
                       )}
-                    </>
-                  ) : (
-                    <p className="text-muted-foreground">No activity</p>
-                  )}
-                </div>
-              </TooltipContent>
-            </Tooltip>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
           ))}
         </TooltipProvider>
       </div>
+
+      {/* Date Labels (show for first week only) */}
+      {weeks.length > 0 && (
+        <div className="flex gap-1 mt-2 text-[10px] text-muted-foreground">
+          {weeks[0].map((day) => (
+            <span key={day.date} className="w-8 text-center">
+              {new Date(day.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Legend */}
       <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">

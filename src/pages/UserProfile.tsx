@@ -6,7 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Clock, Calendar, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import API from "@/api/api";
-import ContributionCalendar from "@/components/ContributionCalendar";
+
+import AdminActivityViewer from "@/components/AdminActivityViewer";
+import GithubActivityCalendar from "@/components/GithubActivityCalendar";
+import { useUserActivity } from "@/hooks/useUserActivity";
 
 const UserProfile = () => {
   const { id } = useParams();
@@ -166,15 +169,18 @@ const UserProfile = () => {
           </Card>
         </div>
 
-        {/* Contribution Calendar */}
+        {/* Full-Year Activity Calendar (Admin View) */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Activity Calendar (Last 90 Days)</CardTitle>
+            <CardTitle>Activity Calendar (Full Year)</CardTitle>
           </CardHeader>
           <CardContent>
-            <ContributionCalendar activities={profile.calendar} />
+            {/* Use the useUserActivity hook to fetch activity for this user and year */}
+            <AdminUserActivity userId={profile.user._id} />
           </CardContent>
         </Card>
+
+
 
         {/* Recent Logs */}
         <Card>
@@ -206,5 +212,15 @@ const UserProfile = () => {
     </div>
   );
 };
+
+
+// Inline component to fetch and render the calendar for the given userId
+function AdminUserActivity({ userId }: { userId: string }) {
+  const year = new Date().getFullYear();
+  const { data, isLoading, error } = useUserActivity(userId, year);
+  if (isLoading) return <div>Loading activity...</div>;
+  if (error) return <div>Error: {error}</div>;
+  return <GithubActivityCalendar data={data} year={year} />;
+}
 
 export default UserProfile;

@@ -110,6 +110,16 @@ const ViewMyQR = () => {
             )}
           </Button>
 
+
+          {/* View All QRs Button */}
+          <Button
+            variant="secondary"
+            className="w-full mt-4 h-12"
+            onClick={() => navigate("/user/allqrs")}
+          >
+            View All QRs
+          </Button>
+
           {/* New Request Button */}
           <Button
             variant="outline"

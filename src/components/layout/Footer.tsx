@@ -5,6 +5,7 @@ import focusDeskLogo from "@/assets/focusdesk-logo.png";
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
+  const user = localStorage.getItem("focusdesk_user");
   return (
     <footer className="bg-[hsl(207_55%_15%)] text-[hsl(207_20%_90%)]">
       {/* Main Footer Content */}
@@ -33,23 +34,32 @@ const Footer = () => {
             <h4 className="font-semibold text-white mb-4">Quick Links</h4>
             <nav className="flex flex-col items-center gap-2">
               <a 
-                href="#features" 
+                href="http://localhost:5173/#features" 
                 className="text-sm text-[hsl(207_20%_60%)] hover:text-white transition-colors"
               >
                 Features
               </a>
               <a 
-                href="#how-it-works" 
+                href="http://localhost:5173/#how-it-works" 
                 className="text-sm text-[hsl(207_20%_60%)] hover:text-white transition-colors"
               >
                 How It Works
               </a>
-              <Link 
-                to="/login" 
-                className="text-sm text-[hsl(207_20%_60%)] hover:text-white transition-colors"
-              >
-                Get Access
-              </Link>
+              {user ? (
+                <Link 
+                  to="/user/viewqr" 
+                  className="text-sm text-[hsl(207_20%_60%)] hover:text-white transition-colors"
+                >
+                  My QR
+                </Link>
+              ) : (
+                <Link 
+                  to="/login" 
+                  className="text-sm text-[hsl(207_20%_60%)] hover:text-white transition-colors"
+                >
+                  Get Access
+                </Link>
+              )}
               <Link 
                 to="/admin/login" 
                 className="text-sm text-[hsl(207_20%_60%)] hover:text-white transition-colors"
@@ -96,9 +106,7 @@ const Footer = () => {
               © {currentYear} FocusDesk. All rights reserved.
             </p>
             <div className="flex items-center gap-1 text-sm text-[hsl(207_20%_50%)]">
-              <span>Made with</span>
-              <span className="text-red-400">♥</span>
-              <span>by DTU Students</span>
+              <span>Mady by Krishna Joshi</span>
             </div>
           </div>
         </div>
