@@ -17,12 +17,18 @@ const AdminLogin = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!formData.email || !formData.password) {
       toast.error("Please fill in all fields");
       return;
     }
-
+    // Strict admin credentials check
+    if (
+      formData.email !== "focusdesk@admin" ||
+      formData.password !== "admin@602"
+    ) {
+      toast.error("Invalid admin credentials");
+      return;
+    }
     setIsLoading(true);
     // Simulate login
     await new Promise((resolve) => setTimeout(resolve, 1500));
