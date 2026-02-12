@@ -85,7 +85,7 @@ const FlaggedActivities = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/admin/user-profile/${activity.requestId}`)}
+                      onClick={() => navigate(`/admin/dashboard/user-profile/${activity.requestId}`)}
                     >
                       View Profile
                     </Button>

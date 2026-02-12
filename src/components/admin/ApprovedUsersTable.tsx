@@ -22,7 +22,7 @@ import { Loader2, Calendar, User, Building2, Fingerprint, Clock, Activity, Searc
 import { Input } from "@/components/ui/input";
 
 interface User {
-  id: number;
+  _id: string;
   fullName: string;
   idNumber: string;
   organisation: string;
@@ -31,7 +31,7 @@ interface User {
 }
 
 interface ScanLog {
-  id: number;
+  _id: string;
   passType: "IN" | "OUT";
   gateId: string;
   result: "ALLOW" | "DENY";
@@ -100,7 +100,7 @@ const ApprovedUsersTable = () => {
     setDetailLogs([]);
     try {
       setDetailLoading(true);
-      const res = await API.get(`/api/admin/scanlogs/${user.id}`);
+      const res = await API.get(`/api/admin/scanlogs/${user._id}`);
       setDetailLogs(res.data?.logs || []);
       if (res.data?.user) {
         setDetailUser(res.data.user);
@@ -151,7 +151,7 @@ const ApprovedUsersTable = () => {
         </TableHeader>
         <TableBody>
           {filteredUsers.map((u) => (
-            <TableRow key={u.id} className="group hover:bg-slate-50/80 transition-all">
+            <TableRow key={u._id} className="group hover:bg-slate-50/80 transition-all">
               <TableCell>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs uppercase">
@@ -177,7 +177,7 @@ const ApprovedUsersTable = () => {
                     size="sm"
                     variant="outline"
                     className="bg-white hover:bg-primary hover:text-white transition-all"
-                    onClick={() => navigate(`/admin/user-profile/${u.id}`)}
+                    onClick={() => navigate(`/admin/dashboard/user-profile/${u._id}`)}
                   >
                     View Profile
                   </Button>
@@ -252,7 +252,7 @@ const ApprovedUsersTable = () => {
                       <TableRow><TableCell colSpan={5} className="h-32 text-center text-slate-400 text-sm italic">No recent activity recorded</TableCell></TableRow>
                     ) : (
                       detailLogs.map((log) => (
-                        <TableRow key={log.id} className="hover:bg-slate-50 transition-colors">
+                        <TableRow key={log._id} className="hover:bg-slate-50 transition-colors">
                           <TableCell className="text-xs text-slate-500 font-medium">{formatDateTime(log.createdAt)}</TableCell>
                           <TableCell>
                             <Badge className={log.passType === "IN" ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-orange-50 text-orange-600 border-orange-100"} variant="outline">

@@ -283,7 +283,7 @@ const UserDashboard = () => {
               {activeQRData?.activeQRType && (
                 <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 mb-4 text-center">
                   <p className="text-xs text-primary font-semibold">
-                    🔄 Active QR: {activeQRData.activeQRType} • Rotates every 30s
+                    🔄 Active QR: {activeQRData.activeQRType}
                   </p>
                 </div>
               )}

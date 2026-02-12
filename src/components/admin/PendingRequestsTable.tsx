@@ -25,10 +25,10 @@ import API from "@/api/api";
 import { Input } from "@/components/ui/input";
 
 /**
- * ✅ Correct Request Type for Sequelize/MySQL
+ * ✅ Correct Request Type for MongoDB
  */
 interface Request {
-  id: number; // ✅ Sequelize provides `id`
+  _id: string; // ✅ MongoDB uses _id
   fullName: string;
   idNumber: string;
   organisation: string;
@@ -41,7 +41,7 @@ const PendingRequestsTable = () => {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [loadingId, setLoadingId] = useState<number | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchInput, setSearchInput] = useState("");
 
@@ -96,13 +96,13 @@ const PendingRequestsTable = () => {
    * ✅ Approve Request
    */
   const handleApprove = async (request: Request) => {
-    setLoadingId(request.id);
+    setLoadingId(request._id);
 
     try {
-      await API.post(`/api/admin/approve/${request.id}`);
+      await API.post(`/api/admin/approve/${request._id}`);
 
       // ✅ Remove approved request from table
-      setRequests((prev) => prev.filter((r) => r.id !== request.id));
+      setRequests((prev) => prev.filter((r) => r._id !== request._id));
 
       toast.success(`Approved access for ${request.fullName}`);
     } catch (err: any) {
@@ -132,17 +132,17 @@ const PendingRequestsTable = () => {
 
     if (!selectedRequest) return;
 
-    setLoadingId(selectedRequest.id);
+    setLoadingId(selectedRequest._id);
     setRejectModalOpen(false);
 
     try {
-      await API.post(`/api/admin/reject/${selectedRequest.id}`, {
+      await API.post(`/api/admin/reject/${selectedRequest._id}`, {
         rejectionReason: rejectReason,
       });
 
       // ✅ Remove rejected request
       setRequests((prev) =>
-        prev.filter((r) => r.id !== selectedRequest.id)
+        prev.filter((r) => r._id !== selectedRequest._id)
       );
 
       toast.success(`Rejected request from ${selectedRequest.fullName}`);
@@ -218,7 +218,7 @@ const PendingRequestsTable = () => {
 
               <TableBody>
                 {filteredRequests.map((request) => (
-                  <TableRow key={request.id}>
+                  <TableRow key={request._id}>
                     <TableCell className="font-medium">
                       {request.fullName}
                     </TableCell>
@@ -234,10 +234,10 @@ const PendingRequestsTable = () => {
                         <Button
                           size="sm"
                           onClick={() => handleApprove(request)}
-                          disabled={loadingId === request.id}
+                          disabled={loadingId === request._id}
                           className="bg-success hover:bg-success/90 text-success-foreground"
                         >
-                          {loadingId === request.id ? (
+                          {loadingId === request._id ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
                             <>
@@ -252,7 +252,7 @@ const PendingRequestsTable = () => {
                           size="sm"
                           variant="destructive"
                           onClick={() => openRejectModal(request)}
-                          disabled={loadingId === request.id}
+                          disabled={loadingId === request._id}
                         >
                           <XCircle className="w-4 h-4 mr-1" />
                           Reject

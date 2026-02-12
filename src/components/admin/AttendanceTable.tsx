@@ -21,17 +21,19 @@ import { Loader2, History, Coffee, LogIn, LogOut, ArrowRightCircle, Activity, Se
 import { Input } from "@/components/ui/input";
 
 interface Attendance {
-  requestId: number;
+  requestId: string;
   fullName: string;
   idNumber: string;
   organisation: string;
   firstIn: string | null;
   lastOut: string | null;
   breaks: number;
+  isFlagged: boolean;
+  flagReason: string | null;
 }
 
 interface ScanLog {
-  id: number;
+  _id: string;
   passType: "IN" | "OUT";
   gateId: string;
   result: "ALLOW" | "DENY";
@@ -143,17 +145,40 @@ const AttendanceTable = () => {
         </TableHeader>
         <TableBody>
           {filteredData.map((a) => (
-            <TableRow key={a.requestId} className="hover:bg-blue-50/30 transition-all group">
+            <TableRow 
+              key={a.requestId} 
+              className={`transition-all group ${
+                a.isFlagged 
+                  ? 'bg-red-50 hover:bg-red-100 border-l-4 border-red-500' 
+                  : 'hover:bg-blue-50/30'
+              }`}
+            >
               <TableCell>
                 <div className="flex flex-col">
-                  <span className="font-bold text-slate-700">{a.fullName}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`font-bold ${a.isFlagged ? 'text-red-700' : 'text-slate-700'}`}>
+                      {a.fullName}
+                    </span>
+                    {a.isFlagged && (
+                      <Badge variant="destructive" className="text-xs">
+                        FLAGGED
+                      </Badge>
+                    )}
+                  </div>
                   <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 rounded w-fit">{a.idNumber}</span>
+                  {a.isFlagged && a.flagReason && (
+                    <span className="text-[10px] text-red-600 mt-1 italic">{a.flagReason}</span>
+                  )}
                 </div>
               </TableCell>
-              <TableCell className="text-center font-semibold text-emerald-600">{formatDateTime(a.firstIn)}</TableCell>
-              <TableCell className="text-center font-semibold text-rose-500">{formatDateTime(a.lastOut)}</TableCell>
+              <TableCell className={`text-center font-semibold ${a.isFlagged ? 'text-red-600' : 'text-emerald-600'}`}>
+                {formatDateTime(a.firstIn)}
+              </TableCell>
+              <TableCell className={`text-center font-semibold ${a.isFlagged ? 'text-red-600' : 'text-rose-500'}`}>
+                {formatDateTime(a.lastOut)}
+              </TableCell>
               <TableCell className="text-center">
-                <Badge variant="secondary" className="bg-amber-50 text-amber-600 border-amber-100">
+                <Badge variant="secondary" className={a.isFlagged ? 'bg-red-100 text-red-600 border-red-200' : 'bg-amber-50 text-amber-600 border-amber-100'}>
                   <Coffee className="w-3 h-3 mr-1" /> {a.breaks}
                 </Badge>
               </TableCell>
@@ -219,7 +244,7 @@ const AttendanceTable = () => {
                                     <TableRow><TableCell colSpan={4} className="h-40 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-200" /></TableCell></TableRow>
                                 ) : (
                                     detailLogs.map((log) => (
-                                        <TableRow key={log.id} className="hover:bg-slate-50/50">
+                                        <TableRow key={log._id} className="hover:bg-slate-50/50">
                                             <TableCell className="text-xs font-medium text-slate-600">{new Date(log.createdAt).toLocaleTimeString("en-IN")}</TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className={log.passType === "IN" ? "border-emerald-200 text-emerald-700 bg-emerald-50" : "border-rose-200 text-rose-700 bg-rose-50"}>
